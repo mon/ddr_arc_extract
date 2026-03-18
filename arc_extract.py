@@ -3,9 +3,7 @@
 import sys
 import os
 import errno
-from struct import pack, unpack, calcsize
-
-import glob
+from struct import unpack, calcsize
 
 from tqdm import tqdm
 
@@ -33,11 +31,10 @@ def grab_string(f):
         tmp = f.read(1)
     return res.decode('utf8')
 
-def extract(path, out = None):
-    if out is None:
-        out = path.replace('.','_')
-        if out == path:
-            out += '_arc'
+def extract(path, out_root=None):
+    if out_root is None:
+        out_root = '.'
+        # out_root = 'dal'
 
     with open(path, 'rb') as f:
         _magic, _version_maybe, filecount, _compression_maybe = \
@@ -54,7 +51,7 @@ def extract(path, out = None):
 
         for name, file_offset, unpacked_size, packed_size in tqdm(files):
             tqdm.write(name)
-            file = os.path.join(out, name)
+            file = os.path.join(out_root, name)
             folder = os.path.dirname(file)
             mkdir_p(folder)
             with open(file, 'wb') as f_out:
@@ -67,6 +64,14 @@ def extract(path, out = None):
                     tqdm.write('MISMATCH: {0} ({0:02x}) {1} ({1:02x})'.format(len(data),unpacked_size))
                 f_out.write(data)
 
+        if out_root == 'dal':
+            with open(path[:-3]+out_root, mode='w', newline='\r\n') as f:
+                f.write('\n'.join(out_root+'/'+f[0] for f in files))
+
+            print()
+            print('copy file.dal to same data location as file.arc')
+            print('copy dal folder output to game contents root')
+            print('hex edit gamemdx.dll string file.arc -> file.dal')
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
