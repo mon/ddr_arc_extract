@@ -41,6 +41,8 @@ def create(files, output, store_only=False):
                     compressed_size = uncompressed_size
                 else:
                     compressed = compress(uncompressed)
+                    if len(compressed) > uncompressed_size:
+                        compressed = uncompressed
                     compressed_size = len(compressed)
                 all_files_content.extend(compressed)
                 pad = -len(compressed) % 64
